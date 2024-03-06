@@ -16,6 +16,54 @@ datasource db {
 model User {
   id Int @default(autoincrement()) @id
   email String @unique
-  name String?
+  firstName String?
+  lastName String?
   password String
+  evidence Evidence?
+  transaction Transaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Transaction {
+  id Int @default(autoincrement()) @id
+  from String
+  to String
+  amount BigInt
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("transactions")
+}
+
+model Evidence {
+  id Int @default(autoincrement()) @id
+  status String
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id])
+  ipfs Ipfs?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("evidences")
+}
+
+model Ipfs {
+  id Int @default(autoincrement()) @id
+  folderCid String 
+  linkIpfs String
+  evidenceId Int @unique
+  evidence Evidence @relation(fields: [evidenceId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ipfs")
 }

@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { AxiosError } from 'axios';
 import { catchError } from 'rxjs';
-import { TransferIpfsFileDto } from 'src/dto/TransferIpfsFile.dto';
+import { TransferIpfsFileDto } from 'src/files/dto/copy.dto';
 
 @Injectable()
 export class FilesService {
