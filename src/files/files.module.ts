@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { FilesService } from '../services/file.service';
+import { FilesService } from './file.service';
 import { HttpModule } from '@nestjs/axios';
-import { FileController } from 'src/controllers/file.controller';
+import { FileController } from 'src/files/file.controller';
 
 @Module({
   imports: [

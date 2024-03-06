@@ -1,7 +1,7 @@
 import { Body, Controller, HttpStatus, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { TransferIpfsFileDto } from 'src/dto/TransferIpfsFile.dto';
-import { FilesService } from 'src/services/file.service';
+import { FilesService } from 'src/files/file.service';
 
 @Controller('/files')
 export class FileController {
