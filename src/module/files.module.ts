@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { FilesService } from '../services/file.service';
 import { HttpModule } from '@nestjs/axios';
+import { FileController } from 'src/controllers/file.controller';
 
 @Module({
   imports: [
@@ -9,6 +10,7 @@ import { HttpModule } from '@nestjs/axios';
       maxRedirects: 5,
     }),
   ],
+  controllers: [FileController],
   providers: [FilesService],
 })
 export class FilesModule {}
