@@ -15,9 +15,9 @@ export class AuthController {
   }
 
   @Post('login')
-  @UseGuards(LocalGuard)
+  // @UseGuards(LocalGuard)
   login(@Body() loginRequestDto: LoginRequestDto) {
-    const user = this.authService.validateUser(loginRequestDto);
+    const user = this.authService.login(loginRequestDto);
     return user;
   }
 
