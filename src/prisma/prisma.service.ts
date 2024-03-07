@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
+import { timeStamp } from 'console';
 
 @Injectable()
 export class PrismaService extends PrismaClient {
@@ -12,5 +13,14 @@ export class PrismaService extends PrismaClient {
         },
       },
     });
+  }
+
+  cleanDatabase() {
+    this.$transaction([
+      this.user.deleteMany(),
+      this.transaction.deleteMany(),
+      this.evidence.deleteMany(),
+      this.ipfs.deleteMany(),
+    ]);
   }
 }

@@ -1,11 +1,35 @@
-import { Body, Controller, HttpStatus, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpStatus,
+  Post,
+  Req,
+  Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
+import { storageConfig } from 'helpers/config';
+import { JwtAuthGuard } from 'src/auth/guards';
 import { TransferIpfsFileDto } from 'src/files/dto/copy.dto';
 import { FilesService } from 'src/files/file.service';
 
-@Controller('/files')
+@UseGuards(JwtAuthGuard)
+@Controller('files')
 export class FileController {
   private readonly fileServices: FilesService;
+
+  @Post('upload-file')
+  @UseInterceptors(
+    FileInterceptor('file', { storage: storageConfig('avatar') }),
+  )
+  // @UseGuards(JwtAuthGuard)
+  uploadFile(@Req() req: any, @UploadedFile() file: Express.Multer.File) {
+    console.log('Upload file');
+    console.log(file);
+  }
 
   @Post('/copy-file')
   async copyFile(
