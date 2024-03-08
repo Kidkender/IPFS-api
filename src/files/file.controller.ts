@@ -25,10 +25,17 @@ export class FileController {
   @UseInterceptors(
     FileInterceptor('file', { storage: storageConfig('avatar') }),
   )
-  // @UseGuards(JwtAuthGuard)
-  uploadFile(@Req() req: any, @UploadedFile() file: Express.Multer.File) {
+  async uploadFile(
+    @Req() req: any,
+    @Res() res: Response,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     console.log('Upload file');
     console.log(file);
+    await this.fileServices.uploadFile(file);
+    return res
+      .status(HttpStatus.OK)
+      .json({ message: 'Upload file successfully uploaded' });
   }
 
   @Post('/copy-file')
