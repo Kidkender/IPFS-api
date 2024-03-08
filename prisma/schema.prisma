@@ -21,11 +21,26 @@ model User {
   password String
   evidence Evidence?
   transaction Transaction[]
+  wallet Wallet?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model Wallet {
+  id Int @default(autoincrement()) @id
+  address String
+  privateKey String?
+  balance BigInt?
+  
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("wallet")
 }
 
 model Transaction {

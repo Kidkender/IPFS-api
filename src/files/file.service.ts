@@ -2,6 +2,8 @@ import { HttpService } from '@nestjs/axios';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { AxiosError } from 'axios';
 import * as FormData from 'form-data';
+import * as fs from 'fs';
+import { fixRouteAddFiles } from 'helpers/ipfsRoute';
 import { catchError, firstValueFrom } from 'rxjs';
 import { TransferIpfsFileDto } from 'src/files/dto/copy.dto';
 
@@ -10,17 +12,29 @@ export class FilesService {
   private readonly logger = new Logger(FilesService.name);
   constructor(private readonly httpService: HttpService) {}
 
-  async uploadFile(file: Express.Multer.File) {
-    try {
-      const formData = new FormData();
+  domainNgRok: string = 'morally-immune-blowfish.ngrok-free.app';
 
-      formData.append('file', file.buffer, {
-        filename: file.originalname,
+  async uploadFile(
+    file: Express.Multer.File,
+    folderName: string,
+    fileName: string,
+  ) {
+    try {
+      if (!file) {
+        throw new BadRequestException('File not found');
+      }
+
+      const formData = new FormData();
+      const newFileName = fixRouteAddFiles(folderName, fileName);
+
+      const fileData = fs.readFileSync(file.path);
+      formData.append('file', fileData, {
+        filename: newFileName || file.originalname,
       });
 
       const response = await firstValueFrom(
         this.httpService.post(
-          'http://127.0.0.1:5001/api/v0/add?pin=true&wrap-with-directory=true',
+          `https://${this.domainNgRok}/api/v0/add?to-files=/evidenceFolder`,
           formData,
           {
             headers: {
@@ -30,12 +44,10 @@ export class FilesService {
           },
         ),
       );
-
-      console.log(response.data);
-
+      console.log('data: ' + response.data);
       return response.data;
     } catch (error) {
-      throw Error(error.message);
+      throw new BadRequestException(error);
     }
   }
 

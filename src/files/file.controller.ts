@@ -19,7 +19,7 @@ import { FilesService } from 'src/files/file.service';
 @UseGuards(JwtAuthGuard)
 @Controller('files')
 export class FileController {
-  private readonly fileServices: FilesService;
+  constructor(private readonly fileServices: FilesService) {}
 
   @Post('upload-file')
   @UseInterceptors(
@@ -32,7 +32,10 @@ export class FileController {
   ) {
     console.log('Upload file');
     console.log(file);
-    await this.fileServices.uploadFile(file);
+
+    let { folderName, fileName } = req.body;
+
+    await this.fileServices.uploadFile(file, folderName, fileName);
     return res
       .status(HttpStatus.OK)
       .json({ message: 'Upload file successfully uploaded' });
