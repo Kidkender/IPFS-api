@@ -1,6 +1,18 @@
-import { Controller, Get, HttpStatus, Query, Res } from '@nestjs/common';
-import { IpfsService } from './ipfs.service';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { Response } from 'express';
+import { GetUser } from 'src/auth/decorators';
+import { JwtAuthGuard } from 'src/auth/guards';
+import { AddFileIpfsDto } from './dto';
+import { IpfsService } from './ipfs.service';
 
 @Controller('ipfs')
 export class IpfsController {
@@ -18,5 +30,18 @@ export class IpfsController {
     return res
       .status(HttpStatus.OK)
       .json(await this.ipfsService.contentDirectory(cid));
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  async addFile(
+    @GetUser('id') userId: number,
+    @Body() addFileDto: AddFileIpfsDto,
+    @Res() res: Response,
+  ) {
+    await this.ipfsService.addIpfs(userId, addFileDto);
+    return res
+      .status(HttpStatus.OK)
+      .json({ message: 'Add database successfully' });
   }
 }

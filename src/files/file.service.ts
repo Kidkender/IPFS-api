@@ -3,9 +3,9 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { AxiosError } from 'axios';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
-import { fixRouteAddFiles } from 'helpers/ipfsRoute';
 import { catchError, firstValueFrom } from 'rxjs';
 import { TransferIpfsFileDto } from 'src/files/dto/copy.dto';
+import { AddFileIpfsDto } from 'src/ipfs/dto/add.dto';
 
 @Injectable()
 export class FilesService {
@@ -14,27 +14,22 @@ export class FilesService {
 
   domainNgRok: string = 'morally-immune-blowfish.ngrok-free.app';
 
-  async uploadFile(
-    file: Express.Multer.File,
-    folderName: string,
-    fileName: string,
-  ) {
+  async uploadFile(file: Express.Multer.File, nameFolderMfs: string) {
     try {
       if (!file) {
         throw new BadRequestException('File not found');
       }
 
       const formData = new FormData();
-      const newFileName = fixRouteAddFiles(folderName, fileName);
 
       const fileData = fs.readFileSync(file.path);
       formData.append('file', fileData, {
-        filename: newFileName || file.originalname,
+        filename: file.originalname,
       });
 
       const response = await firstValueFrom(
         this.httpService.post(
-          `https://${this.domainNgRok}/api/v0/add?to-files=/evidenceFolder`,
+          `https://${this.domainNgRok}/api/v0/add?to-files=/${nameFolderMfs}`,
           formData,
           {
             headers: {
@@ -44,12 +39,46 @@ export class FilesService {
           },
         ),
       );
-      console.log('data: ' + response.data);
-      return response.data;
+
+      const responseData = response.data
+        .split('\n')
+        .filter((item) => !!item)
+        .map((item) => JSON.parse(item));
+
+      const addFileIpfsDto = new AddFileIpfsDto();
+
+      return responseData;
     } catch (error) {
       throw new BadRequestException(error);
     }
   }
+
+  uploadWithWrapDirectory = async (file: Express.Multer.File) => {
+    if (!file) {
+      throw new BadRequestException('File  not found');
+    }
+
+    const formData = new FormData();
+    const fileData = fs.readFileSync(file.path);
+    formData.append('file', fileData, {
+      filename: file.originalname,
+    });
+
+    const response = await firstValueFrom(
+      this.httpService.post(
+        `https://${this.domainNgRok}/api/v0/add?wrap-with-directory=true&to-files=/evidenceFolder`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            ...formData.getHeaders(),
+          },
+        },
+      ),
+    );
+    console.log('Data: ', response.data);
+    return response.data;
+  };
 
   async copyFileToMfs(transferFileDto: TransferIpfsFileDto): Promise<void> {
     if (!transferFileDto) {

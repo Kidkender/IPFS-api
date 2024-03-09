@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
-import { timeStamp } from 'console';
 
 @Injectable()
 export class PrismaService extends PrismaClient {

@@ -30,18 +30,23 @@ export class FileController {
     @Res() res: Response,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    console.log('Upload file');
-    console.log(file);
+    const { nameFolderMfs } = req.query;
 
-    let { folderName, fileName } = req.body;
-
-    await this.fileServices.uploadFile(file, folderName, fileName);
-    return res
-      .status(HttpStatus.OK)
-      .json({ message: 'Upload file successfully uploaded' });
+    const response = await this.fileServices.uploadFile(file, nameFolderMfs);
+    return res.status(HttpStatus.OK).json(response);
   }
 
-  @Post('/copy-file')
+  @Post('wrap-directory')
+  @UseInterceptors(FileInterceptor('file', { storage: storageConfig('image') }))
+  async uploadWithDirectory(
+    @Res() res: Response,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    await this.fileServices.uploadWithWrapDirectory(file);
+    return res.status(HttpStatus.OK).json('Upload done');
+  }
+
+  @Post('copy-file')
   async copyFile(
     @Body() transferFileRequestDto: TransferIpfsFileDto,
     @Res() res: Response,

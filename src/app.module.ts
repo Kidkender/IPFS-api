@@ -8,6 +8,7 @@ import { IpfsService } from './ipfs/ipfs.service';
 import { IpfsController } from './ipfs/ipfs.controller';
 import { IpfsModule } from './ipfs/ipfs.module';
 import { HttpModule } from '@nestjs/axios';
+import { EvidencesModule } from './evidences/evidences.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { HttpModule } from '@nestjs/axios';
       isGlobal: true,
     }),
     IpfsModule,
+    EvidencesModule,
   ],
   controllers: [IpfsController],
   providers: [IpfsService],

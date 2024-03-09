@@ -22,6 +22,7 @@ model User {
   evidence Evidence?
   transaction Transaction[]
   wallet Wallet?
+  ipfs Ipfs[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -62,7 +63,6 @@ model Evidence {
   status String
   userId Int @unique
   user User @relation(fields: [userId], references: [id])
-  ipfs Ipfs?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -73,9 +73,10 @@ model Evidence {
 model Ipfs {
   id Int @default(autoincrement()) @id
   folderCid String 
-  linkIpfs String
-  evidenceId Int @unique
-  evidence Evidence @relation(fields: [evidenceId], references: [id])
+  linkIpfs String?
+  sizeFolder Float?
+  userId Int
+  user User @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

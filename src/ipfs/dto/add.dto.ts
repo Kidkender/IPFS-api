@@ -1,7 +1,13 @@
-export class AddResponseDto {
-  fileCid: string;
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+export class AddFileIpfsDto {
+  @IsString()
+  @IsNotEmpty()
   folderCid: string;
-  nameFile: string;
-  nameFolder: string;
-  Size: string;
+
+  @IsOptional()
+  evidenceId?: number;
+
+  @IsOptional()
+  sizeFolder?: number;
 }
