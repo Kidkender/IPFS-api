@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
   Query,
   Res,
@@ -43,5 +45,18 @@ export class IpfsController {
     return res
       .status(HttpStatus.OK)
       .json({ message: 'Add database successfully' });
+  }
+
+  @Get('getall')
+  @UseGuards(JwtAuthGuard)
+  async getAll(@Res() res: Response) {
+    const response = await this.ipfsService.getAllIpfs();
+    return res.status(HttpStatus.OK).json(response);
+  }
+
+  @Get('/user/:id')
+  @UseGuards(JwtAuthGuard)
+  getIpfsByUser(@Param('id', ParseIntPipe) userId: number) {
+    return this.ipfsService.getIpfsByUserId(userId);
   }
 }

@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AddFileIpfsDto } from './dto/add.dto';
 import { StatusResponseDto } from './dto/status.dto';
+import { Ipfs } from '@prisma/client';
 
 @Injectable()
 export class IpfsService {
@@ -73,5 +74,17 @@ export class IpfsService {
       Logger.log(error);
       throw new BadRequestException(error.message);
     }
+  };
+
+  getAllIpfs = async () => {
+    const allIpfs = await this.prismaService.ipfs.findMany();
+    return allIpfs;
+  };
+
+  getIpfsByUserId = async (userId: number): Promise<Ipfs[]> => {
+    const ipfs = await this.prismaService.ipfs.findMany({
+      where: { userId: userId },
+    });
+    return ipfs;
   };
 }
