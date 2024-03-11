@@ -20,7 +20,7 @@ export class PrismaService extends PrismaClient {
       this.transaction.deleteMany(),
       this.evidence.deleteMany(),
       this.ipfs.deleteMany(),
-      this.wallet.deleteMany(),
+      this.wallets.deleteMany(),
     ]);
   }
 }

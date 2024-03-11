@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, isPhoneNumber } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class RegisterRequestDto {
   firstName: string;

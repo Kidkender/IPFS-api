@@ -68,7 +68,7 @@ export class IpfsService {
     }
 
     try {
-      let linkFile: string = getLinkIpfs(addFileDto.folderCid);
+      const linkFile: string = getLinkIpfs(addFileDto.folderCid);
 
       const fileIpfs = await this.prismaService.ipfs.create({
         data: {

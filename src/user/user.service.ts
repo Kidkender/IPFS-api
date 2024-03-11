@@ -23,7 +23,7 @@ export class UserService {
     }
   };
 
-  checkExistById = (userId: number): Boolean => {
+  checkExistById = (userId: number): boolean => {
     const user = this.getUserById(userId);
     if (!user) {
       return false;
