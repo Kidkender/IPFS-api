@@ -5,12 +5,16 @@ import * as FormData from 'form-data';
 import * as fs from 'fs';
 import { catchError, firstValueFrom } from 'rxjs';
 import { TransferIpfsFileDto } from 'src/files/dto/copy.dto';
+import { IpfsService } from 'src/ipfs/ipfs.service';
 import { AddFileIpfsDto } from 'src/ipfs/dto/add.dto';
 
 @Injectable()
 export class FilesService {
   private readonly logger = new Logger(FilesService.name);
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private ipfsService: IpfsService,
+  ) {}
 
   domainNgRok: string = 'morally-immune-blowfish.ngrok-free.app';
 
@@ -45,15 +49,16 @@ export class FilesService {
         .filter((item) => !!item)
         .map((item) => JSON.parse(item));
 
-      const addFileIpfsDto = new AddFileIpfsDto();
-
       return responseData;
     } catch (error) {
       throw new BadRequestException(error);
     }
   }
 
-  uploadWithWrapDirectory = async (file: Express.Multer.File) => {
+  uploadWithWrapDirectory = async (
+    userId: number,
+    file: Express.Multer.File,
+  ) => {
     if (!file) {
       throw new BadRequestException('File  not found');
     }
@@ -66,7 +71,7 @@ export class FilesService {
 
     const response = await firstValueFrom(
       this.httpService.post(
-        `https://${this.domainNgRok}/api/v0/add?wrap-with-directory=true&to-files=/evidenceFolder`,
+        `https://${this.domainNgRok}/api/v0/add?to-files=/evidenceFolder`,
         formData,
         {
           headers: {
@@ -76,7 +81,13 @@ export class FilesService {
         },
       ),
     );
-    console.log('Data: ', response.data);
+    const { Name, Hash, Size } = response.data;
+    const addFileIpfsDto = new AddFileIpfsDto();
+    addFileIpfsDto.fileName = Name;
+    addFileIpfsDto.folderCid = Hash;
+    addFileIpfsDto.sizeFolder = Number(Size);
+
+    await this.ipfsService.addIpfs(userId, addFileIpfsDto);
     return response.data;
   };
 

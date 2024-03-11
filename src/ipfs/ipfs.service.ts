@@ -3,9 +3,9 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { getLinkIpfs } from 'helpers';
 import { firstValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AddFileIpfsDto } from './dto/add.dto';
-import { StatusResponseDto } from './dto/status.dto';
+
 import { Ipfs } from '@prisma/client';
+import { AddFileIpfsDto, StatusResponseDto } from './dto';
 
 @Injectable()
 export class IpfsService {
@@ -54,14 +54,25 @@ export class IpfsService {
     }
   };
 
+  checkExistCid = async (folderCid: string): Promise<boolean> => {
+    const ipfs = await this.prismaService.ipfs.findUnique({
+      where: { folderCid: folderCid },
+    });
+
+    return !!ipfs;
+  };
+
   addIpfs = async (userId: number, addFileDto: AddFileIpfsDto) => {
+    if (await this.checkExistCid(addFileDto.folderCid)) {
+      throw new BadRequestException('exist cid');
+    }
+
     try {
-      let linkFile: string;
-      if (addFileDto.folderCid) {
-        linkFile = getLinkIpfs(addFileDto.folderCid);
-      }
+      let linkFile: string = getLinkIpfs(addFileDto.folderCid);
+
       const fileIpfs = await this.prismaService.ipfs.create({
         data: {
+          name: addFileDto.fileName,
           folderCid: addFileDto.folderCid,
           sizeFolder: addFileDto.sizeFolder,
           linkIpfs: linkFile,

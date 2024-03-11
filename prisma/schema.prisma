@@ -72,9 +72,11 @@ model Evidence {
 
 model Ipfs {
   id Int @default(autoincrement()) @id
-  folderCid String 
+  name String
+  folderCid String @unique
   linkIpfs String?
   sizeFolder Float?
+
   userId Int
   user User @relation(fields: [userId], references: [id])
 

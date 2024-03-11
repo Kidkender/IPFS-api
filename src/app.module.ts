@@ -9,6 +9,8 @@ import { IpfsModule } from './ipfs/ipfs.module';
 import { IpfsService } from './ipfs/ipfs.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
+import { FilesService } from './files/file.service';
+import { WalletModule } from './wallet/wallet.module';
 
 @Module({
   imports: [
@@ -22,8 +24,9 @@ import { UserModule } from './user/user.module';
     }),
     IpfsModule,
     EvidencesModule,
+    WalletModule,
   ],
-  controllers: [IpfsController],
-  providers: [IpfsService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

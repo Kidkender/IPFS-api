@@ -12,6 +12,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { storageConfig } from 'helpers/config';
+import { GetUser } from 'src/auth/decorators';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { TransferIpfsFileDto } from 'src/files/dto/copy.dto';
 import { FilesService } from 'src/files/file.service';
@@ -39,11 +40,14 @@ export class FileController {
   @Post('wrap-directory')
   @UseInterceptors(FileInterceptor('file', { storage: storageConfig('image') }))
   async uploadWithDirectory(
-    @Res() res: Response,
+    @GetUser('id') userId: number,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    await this.fileServices.uploadWithWrapDirectory(file);
-    return res.status(HttpStatus.OK).json('Upload done');
+    const response = await this.fileServices.uploadWithWrapDirectory(
+      userId,
+      file,
+    );
+    return response;
   }
 
   @Post('copy-file')
