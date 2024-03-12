@@ -9,6 +9,7 @@ import { IpfsModule } from './ipfs/ipfs.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { WalletModule } from './wallet/wallet.module';
+import { NetworksModule } from './networks/networks.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { WalletModule } from './wallet/wallet.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    NetworksModule,
   ],
   controllers: [],
   providers: [],
