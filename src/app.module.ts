@@ -20,11 +20,10 @@ import { WalletModule } from './wallet/wallet.module';
     IpfsModule,
     EvidencesModule,
     WalletModule,
-
+    ConfigsModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    ConfigsModule,
   ],
   controllers: [],
   providers: [],
