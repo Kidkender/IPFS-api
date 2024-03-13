@@ -1,7 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { AxiosError } from 'axios';
-import * as FormData from 'form-data';
+import FormData from 'form-data';
 import * as fs from 'fs';
 import { catchError, firstValueFrom } from 'rxjs';
 import { TransferIpfsFileDto } from 'src/files/dto/copy.dto';

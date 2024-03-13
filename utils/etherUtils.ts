@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
+import * as fs from 'fs';
 
-const hashMessage = (message: string): string => {
+export const hashMessage = (message: string): string => {
   return ethers.utils.hashMessage(message);
 };
 
@@ -12,11 +13,11 @@ export const generateSignature = async (
   return await wallet.signMessage(message);
 };
 
-const verifyMessage = (message: string, signature: string): string => {
+export const verifyMessage = (message: string, signature: string): string => {
   return ethers.utils.verifyMessage(message, signature);
 };
 
-const callDataFunction = async (
+export const callDataFunction = async (
   abi: string,
   nameFunction: string,
   value: any,
@@ -26,9 +27,9 @@ const callDataFunction = async (
   return data;
 };
 
-export default {
-  hashMessage,
-  generateSignature,
-  verifyMessage,
-  callDataFunction,
+export const getAbi = (pathFile: string) => {
+  var parsed = JSON.parse(
+    fs.readFileSync(`utils/abi/${pathFile}.json`, 'utf8'),
+  );
+  return parsed.abi;
 };

@@ -18,7 +18,6 @@ export class WalletService {
 
   generateWallet = async (): Promise<Wallet> => {
     const wallet: Wallet = this.etherSigner.createRandomWallet();
-    console.log(wallet.provider);
     return wallet;
   };
 

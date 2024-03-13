@@ -8,7 +8,6 @@ import { ConfigsService } from './configs.service';
       imports: [ConfigsModule],
       inject: [ConfigsService],
       useFactory: async (config: ConfigsService) => {
-        // await somePromise();
         return {
           network: SEPOLIA_NETWORK,
           infura: config.infura,
