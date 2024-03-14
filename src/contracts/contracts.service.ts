@@ -8,9 +8,9 @@ import {
 } from 'nestjs-ethers';
 
 import { BaseProvider } from '@ethersproject/providers';
+import { ConfigService } from '@nestjs/config';
 import { SIGNER_ADDRESS, TOKEN_ABI_JSON, TOKEN_ADDRESS } from 'constant';
-import { BigNumber, Contract, Signer, VoidSigner, ethers } from 'ethers';
-import { ConfigsService } from 'src/configs/configs.service';
+import { Contract, VoidSigner, Wallet, ethers } from 'ethers';
 import { convertToDecimal, getAbi } from 'utils';
 import { GasPriceResponseDto, TransferDto } from './dto';
 import { ContractMapper } from './mapper/contracts.mapper';
@@ -21,32 +21,26 @@ export class ContractsService {
     @InjectContractProvider() private readonly ethersContract: EthersContract,
     @InjectEthersProvider() private readonly ethersProvider: BaseProvider,
     @InjectSignerProvider() private readonly signerProvider: EthersSigner,
-    private readonly configsService: ConfigsService,
+    private readonly configService: ConfigService,
     private readonly contractMapper: ContractMapper,
   ) {}
   private readonly logger = new Logger(ContractsService.name);
 
+  private readonly PRIVATE_KEY_OWNER = this.configService.get(
+    'PRIVATE_ADDRESS_OWNER',
+  );
   getVoidSigner = (signerAddress: string): VoidSigner => {
     const voidSigner = this.signerProvider.createVoidSigner(signerAddress);
 
     return voidSigner;
   };
 
-  getSigner = (signerAddress: string): Signer => {
-    try {
-      const provider = this.configsService.getJsonRpc();
-
-      const signer = provider.getSigner(
-        '0xBBcA09216D5Acd45F98f3e15c0556B19Ea83f5da',
-      );
-      return signer;
-    } catch (error) {
-      console.error(error);
-    }
+  getSigner = (privateKey: string): Wallet => {
+    const signer = new ethers.Wallet(privateKey, this.ethersProvider);
+    return signer;
   };
 
   callContract = async (): Promise<boolean> => {
-    // const provider = await this.ethersProvider.getEtherPrice();
     const signer = this.getVoidSigner(SIGNER_ADDRESS);
     const abi = getAbi(TOKEN_ABI_JSON);
     const contract = this.ethersContract.create(TOKEN_ADDRESS, abi, signer);
@@ -65,7 +59,7 @@ export class ContractsService {
     return contract;
   };
 
-  getAmountToken = async (address: string): Promise<string | Number> => {
+  getAmountToken = async (address: string): Promise<string | number> => {
     const tokenContract = await this.getContract(TOKEN_ABI_JSON, TOKEN_ADDRESS);
     const balanceOf = await tokenContract.balanceOf(address);
     return ethers.utils.formatEther(balanceOf);
@@ -85,25 +79,18 @@ export class ContractsService {
     return data;
   };
 
-  estimateGas = async (transferDto: TransferDto): Promise<BigInt> => {
+  estimateGas = async (transferDto: TransferDto): Promise<bigint> => {
     try {
       const { transferFrom, transferTo, amount } = transferDto;
       const amountToWei = ethers.utils.parseEther(String(amount));
 
-      const signer = new ethers.Wallet(
-        '0d28cf7e47ba23b16b3e1a9d4a731de7e5b68747c148a9fcdf28e96b4b66e171',
-        this.ethersProvider,
-      );
+      const signer = this.getSigner(this.PRIVATE_KEY_OWNER);
 
       const tokenContract = await this.getContract(
         TOKEN_ABI_JSON,
         TOKEN_ADDRESS,
       );
-      console.log(
-        'balance of address from: ',
-        convertToDecimal(await tokenContract.balanceOf(transferFrom)),
-      );
-      console.log('balance will transfer: ', convertToDecimal(amountToWei));
+
       const estimateGas = await tokenContract
         .connect(signer)
         .estimateGas.transferFrom(transferFrom, transferTo, amountToWei);
@@ -114,7 +101,7 @@ export class ContractsService {
   };
 
   transferToken = async (transferDto: TransferDto) => {
-    const { transferFrom, transferTo, amount } = transferDto;
+    const { transferTo, amount } = transferDto;
 
     try {
       const tokenContract = await this.getContract(
@@ -122,11 +109,8 @@ export class ContractsService {
         TOKEN_ADDRESS,
       );
       const amoutToWei = ethers.utils.parseEther(String(amount));
-      // const signer = this.getSigner(transferFrom);
-      const signer = new ethers.Wallet(
-        '0d28cf7e47ba23b16b3e1a9d4a731de7e5b68747c148a9fcdf28e96b4b66e171',
-        this.ethersProvider,
-      );
+      const signer = this.getSigner(this.PRIVATE_KEY_OWNER);
+
       const result = await tokenContract
         .connect(signer)
         .transfer(transferTo, amoutToWei);

@@ -1,11 +1,9 @@
-import { BigNumber } from 'ethers';
-
 export class GasPriceResponseDto {
-  gasPrice: BigInt | Number;
+  gasPrice: bigint | number;
 
-  lastBaseFeePerGas: BigInt | Number;
+  lastBaseFeePerGas: bigint | number;
 
-  maxFeePerGas: BigInt | Number;
+  maxFeePerGas: bigint | number;
 
-  maxPriorityFeePerGas: BigInt | Number;
+  maxPriorityFeePerGas: bigint | number;
 }
