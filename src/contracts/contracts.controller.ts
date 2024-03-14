@@ -28,7 +28,11 @@ export class ContractsController {
 
   @Get('estimate-gas')
   estimateGas(@Body() transferDto: TransferDto) {
-    console.log('Vao day');
     return this.contractService.estimateGas(transferDto);
+  }
+
+  @Get('total-supply')
+  getTotalSupply() {
+    return this.contractService.getTotalSupply();
   }
 }
