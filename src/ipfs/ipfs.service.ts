@@ -35,7 +35,7 @@ export class IpfsService {
       this.logger.log(retriveDto);
       return retriveDto;
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
       throw new BadRequestException(error.message);
     }
   }
@@ -49,7 +49,7 @@ export class IpfsService {
       );
       return response.data;
     } catch (error) {
-      console.log(error);
+      this.logger.error(error);
       throw new Error(error.message);
     }
   };
