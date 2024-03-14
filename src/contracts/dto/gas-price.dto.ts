@@ -1,9 +1,9 @@
 export class GasPriceResponseDto {
-  gasPrice: bigint | number;
+  gasPrice: bigint | string;
 
-  lastBaseFeePerGas: bigint | number;
+  lastBaseFeePerGas: bigint | string;
 
-  maxFeePerGas: bigint | number;
+  maxFeePerGas: bigint | string;
 
-  maxPriorityFeePerGas: bigint | number;
+  maxPriorityFeePerGas: bigint | string;
 }

@@ -30,9 +30,7 @@ export class ContractsService {
     'PRIVATE_ADDRESS_OWNER',
   );
   getVoidSigner = (signerAddress: string): VoidSigner => {
-    const voidSigner = this.signerProvider.createVoidSigner(signerAddress);
-
-    return voidSigner;
+    return this.signerProvider.createVoidSigner(signerAddress);
   };
 
   getSigner = (privateKey: string): Wallet => {
@@ -43,22 +41,29 @@ export class ContractsService {
   getContract = async (
     abiJson: string,
     contractAddress: string,
+    signer: VoidSigner,
   ): Promise<Contract> => {
-    const signer = this.getVoidSigner(SIGNER_ADDRESS);
     const abi = getAbi(abiJson);
     const contract = this.ethersContract.create(contractAddress, abi, signer);
     return contract;
   };
 
   getAmountToken = async (address: string): Promise<string | number> => {
-    const tokenContract = await this.getContract(TOKEN_ABI_JSON, TOKEN_ADDRESS);
-    console.log(tokenContract.functions);
+    const tokenContract = await this.getContract(
+      TOKEN_ABI_JSON,
+      TOKEN_ADDRESS,
+      this.getVoidSigner(SIGNER_ADDRESS),
+    );
     const balanceOf = await tokenContract.balanceOf(address);
     return ethers.utils.formatEther(balanceOf);
   };
 
   getVotes = async (address: string) => {
-    const tokenContract = await this.getContract(TOKEN_ABI_JSON, TOKEN_ADDRESS);
+    const tokenContract = await this.getContract(
+      TOKEN_ABI_JSON,
+      TOKEN_ADDRESS,
+      this.getVoidSigner(SIGNER_ADDRESS),
+    );
     const votes = await tokenContract.getVotes(address);
     return convertToDecimal(votes);
   };
@@ -81,6 +86,7 @@ export class ContractsService {
       const tokenContract = await this.getContract(
         TOKEN_ABI_JSON,
         TOKEN_ADDRESS,
+        this.getVoidSigner(SIGNER_ADDRESS),
       );
 
       const estimateGas = await tokenContract
@@ -96,6 +102,7 @@ export class ContractsService {
     const tokenContract: Contract = await this.getContract(
       TOKEN_ABI_JSON,
       TOKEN_ADDRESS,
+      this.getVoidSigner(SIGNER_ADDRESS),
     );
 
     return ethers.utils.formatEther(
@@ -105,7 +112,11 @@ export class ContractsService {
 
   // Effect to amount token
   mintToken = async (amount: number) => {
-    const tokenContract = await this.getContract(TOKEN_ABI_JSON, TOKEN_ADDRESS);
+    const tokenContract = await this.getContract(
+      TOKEN_ABI_JSON,
+      TOKEN_ADDRESS,
+      this.getVoidSigner(SIGNER_ADDRESS),
+    );
     const amountToWei = ethers.utils.parseEther(String(amount));
     const result = await tokenContract
       .connect(this.PRIVATE_KEY_OWNER)
@@ -120,6 +131,7 @@ export class ContractsService {
       const tokenContract = await this.getContract(
         TOKEN_ABI_JSON,
         TOKEN_ADDRESS,
+        this.getVoidSigner(SIGNER_ADDRESS),
       );
       const amoutToWei = ethers.utils.parseEther(String(amount));
       const signer = this.getSigner(this.PRIVATE_KEY_OWNER);
@@ -127,7 +139,7 @@ export class ContractsService {
       const result = await tokenContract
         .connect(signer)
         .transfer(transferTo, amoutToWei);
-      console.log('Result: ', result);
+      return result;
     } catch (error) {
       this.logger.error(error);
       console.log(error);

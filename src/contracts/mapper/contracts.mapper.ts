@@ -6,10 +6,12 @@ import { GasPriceResponseDto } from '../dto';
 export class ContractMapper {
   mapJsonFeeDataToGasPrice = (data: any): GasPriceResponseDto => {
     return {
-      gasPrice: convertToDecimal(data.gasPrice._hex),
-      lastBaseFeePerGas: convertToDecimal(data.lastBaseFeePerGas._hex),
-      maxFeePerGas: convertToDecimal(data.maxFeePerGas._hex),
-      maxPriorityFeePerGas: convertToDecimal(data.maxPriorityFeePerGas._hex),
+      gasPrice: convertToDecimal(data.gasPrice).toString(),
+      lastBaseFeePerGas: convertToDecimal(data.lastBaseFeePerGas).toString(),
+      maxFeePerGas: convertToDecimal(data.maxFeePerGas).toString(),
+      maxPriorityFeePerGas: convertToDecimal(
+        data.maxPriorityFeePerGas,
+      ).toString(),
     };
   };
 }
