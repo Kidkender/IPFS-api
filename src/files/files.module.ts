@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
-import { FilesService } from './file.service';
 import { HttpModule } from '@nestjs/axios';
+import { Module } from '@nestjs/common';
 import { FileController } from 'src/files/file.controller';
 import { IpfsService } from 'src/ipfs/ipfs.service';
+import { FilesService } from './file.service';
+import { FileMapper } from './mapper/fileMapper';
 
 @Module({
   imports: [
@@ -12,6 +13,6 @@ import { IpfsService } from 'src/ipfs/ipfs.service';
     }),
   ],
   controllers: [FileController],
-  providers: [FilesService, IpfsService],
+  providers: [FilesService, FileMapper, IpfsService],
 })
 export class FilesModule {}

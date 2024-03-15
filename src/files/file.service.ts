@@ -7,13 +7,16 @@ import { catchError, firstValueFrom } from 'rxjs';
 import { TransferIpfsFileDto } from 'src/files/dto/copy.dto';
 import { IpfsService } from 'src/ipfs/ipfs.service';
 import { AddFileIpfsDto } from 'src/ipfs/dto/add.dto';
+import { fixRouteAddFiles } from 'helpers';
+import { FileMapper } from './mapper/fileMapper';
 
 @Injectable()
 export class FilesService {
   private readonly logger = new Logger(FilesService.name);
   constructor(
     private readonly httpService: HttpService,
-    private ipfsService: IpfsService,
+    private readonly ipfsService: IpfsService,
+    private readonly fileMapper: FileMapper,
   ) {}
 
   domainNgRok: string = 'morally-immune-blowfish.ngrok-free.app';
@@ -43,17 +46,47 @@ export class FilesService {
           },
         ),
       );
-
-      const responseData = response.data
-        .split('\n')
-        .filter((item) => !!item)
-        .map((item) => JSON.parse(item));
-
-      return responseData;
+      return response.data;
     } catch (error) {
       throw new BadRequestException(error);
     }
   }
+
+  uploadMutipleFiles = async (
+    files: Express.Multer.File[],
+    nameFolder: string,
+  ) => {
+    try {
+      const formData = new FormData();
+
+      for (const file of files) {
+        const fileData = fs.readFileSync(file.path);
+        const addFolderName = fixRouteAddFiles(nameFolder, file.originalname);
+        this.logger.log('file name: ', addFolderName);
+        formData.append('file', fileData, {
+          filename: addFolderName || file.originalname,
+        });
+      }
+
+      const response = await firstValueFrom(
+        this.httpService.post(
+          `https://${this.domainNgRok}/api/v0/add`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              ...formData.getHeaders(),
+            },
+          },
+        ),
+      );
+
+      const dataMapper = this.fileMapper.mapToUploadResponseDto(response.data);
+
+      console.log('Show: ', dataMapper);
+      return dataMapper;
+    } catch (error) {}
+  };
 
   uploadWithWrapDirectory = async (
     userId: number,
