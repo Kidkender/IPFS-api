@@ -5,7 +5,6 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigsModule } from './configs/configs.module';
 import { ContractsModule } from './contracts/contracts.module';
 import { EvidencesModule } from './evidences/evidences.module';
-import { FilesModule } from './files/files.module';
 import { IpfsModule } from './ipfs/ipfs.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
@@ -14,7 +13,6 @@ import { WalletModule } from './wallet/wallet.module';
 @Module({
   imports: [
     HttpModule,
-    FilesModule,
     AuthModule,
     UserModule,
     PrismaModule,
