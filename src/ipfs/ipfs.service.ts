@@ -1,11 +1,10 @@
 import { HttpService } from '@nestjs/axios';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Ipfs } from '@prisma/client';
-import { AxiosError } from 'axios';
 import FormData from 'form-data';
 import * as fs from 'fs';
 import { fixRouteAddFiles, getLinkIpfs } from 'helpers';
-import { catchError, firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AddFileIpfsDto, StatusResponseDto, TransferIpfsFileDto } from './dto';
 import { IPFSMapper } from './mapper/ipfs.mapper';
@@ -19,43 +18,28 @@ export class IpfsService {
     private readonly ipfsMapper: IPFSMapper,
   ) {}
 
-  async fileStatus(cid: string): Promise<StatusResponseDto> {
-    if (!cid) throw new BadRequestException('cid is required');
+  fileStatus = async (cid: string): Promise<StatusResponseDto> => {
+    if (!cid) throw new BadRequestException('cid must be provided');
 
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(
-          `https://morally-immune-blowfish.ngrok-free.app/api/v0/files/stat?arg=/ipfs/${cid}`,
-        ),
-      );
-      const dataMapper = this.ipfsMapper.mapResponseToStatusResponseDto(
-        response.data,
-      );
+    const response = await firstValueFrom(
+      this.httpService.post(
+        `https://${this.domainNgRok}/api/v0/files/stat?arg=/ipfs/${cid}`,
+      ),
+    );
 
-      this.logger.log(dataMapper);
-      return dataMapper;
-    } catch (error) {
-      this.logger.error(error);
-      throw new BadRequestException(error.message);
-    }
-  }
-
-  contentDirectory = async (folderCid: string): Promise<string> => {
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(
-          `https://morally-immune-blowfish.ngrok-free.app/api/v0/ls?arg=/ipfs/${folderCid}`,
-        ),
-      );
-      return response.data;
-    } catch (error) {
-      this.logger.error(error);
-      throw new Error(error.message);
-    }
+    return this.ipfsMapper.mapResponseToStatusResponseDto(response.data);
   };
 
-  // add new --------------
-  domainNgRok: string = 'morally-immune-blowfish.ngrok-free.app';
+  private domainNgRok: string = 'morally-immune-blowfish.ngrok-free.app';
+
+  contentDirectory = async (folderCid: string): Promise<string> => {
+    const response = await firstValueFrom(
+      this.httpService.post(
+        `https://${this.domainNgRok}/api/v0/ls?arg=/ipfs/${folderCid}`,
+      ),
+    );
+    return response.data;
+  };
 
   private uploadFormData = async (
     formData: FormData,
@@ -74,101 +58,81 @@ export class IpfsService {
       }),
     );
   };
-  async uploadFile(file: Express.Multer.File, nameFolderMfs: string) {
-    try {
-      if (!file) {
-        throw new BadRequestException('File not found');
-      }
 
-      const formData = new FormData();
-
-      const fileData = fs.readFileSync(file.path);
-      formData.append('file', fileData, {
-        filename: file.originalname,
-      });
-
-      const response = await this.uploadFormData(formData);
-      return response.data;
-    } catch (error) {
-      this.logger.error(`Error uploading file: ${error.message}`);
-
-      throw new BadRequestException(error);
+  uploadFile = async (file: Express.Multer.File, nameFolderMfs: string) => {
+    if (!file) {
+      throw new BadRequestException('File not found');
     }
-  }
+
+    const formData = new FormData();
+
+    const fileData = fs.readFileSync(file.path);
+    formData.append('file', fileData, {
+      filename: file.originalname,
+    });
+
+    const response = await this.uploadFormData(formData);
+    return response.data;
+  };
 
   uploadMutipleFiles = async (
     files: Express.Multer.File[],
     nameFolder: string,
   ) => {
-    try {
-      const formData = new FormData();
+    const formData = new FormData();
 
-      for (const file of files) {
-        const fileData = fs.readFileSync(file.path);
-        const addFolderName = fixRouteAddFiles(nameFolder, file.originalname);
-        this.logger.log('file name: ', addFolderName);
-        formData.append('file', fileData, {
-          filename: addFolderName || file.originalname,
-        });
-      }
-
-      const response = await this.uploadFormData(formData);
-      const data = response.data;
-
-      return this.ipfsMapper.mapToUploadResponseDto(data);
-    } catch (error) {
-      this.logger.error(`Error uploading multiple files: ${error.message}`);
-
-      console.log(error);
+    for (const file of files) {
+      const fileData = fs.readFileSync(file.path);
+      const addFolderName = fixRouteAddFiles(nameFolder, file.originalname);
+      formData.append('file', fileData, {
+        filename: addFolderName || file.originalname,
+      });
     }
+
+    const response = await this.uploadFormData(formData);
+
+    return this.ipfsMapper.mapToUploadResponseDto(response.data);
   };
 
   async copyFileToMfs(transferFileDto: TransferIpfsFileDto): Promise<void> {
     if (!transferFileDto) {
       throw new Error('Both source and destination paths are required.');
     }
-    this.httpService
-      .post(
-        `http://localhost:5001/api/v0/files/cp?arg=/ipfs/${transferFileDto.sourceCID}&arg=/${transferFileDto.destination}`,
-      )
-      .pipe(
-        catchError((error: AxiosError) => {
-          this.logger.error(error.response.data);
-          throw new BadRequestException('Have an error in server');
-        }),
-      );
+    await firstValueFrom(
+      this.httpService.post(
+        `http://${this.domainNgRok}/api/v0/files/cp?arg=/ipfs/${transferFileDto.sourceCID}&arg=/${transferFileDto.destination}`,
+      ),
+    );
+    this.logger.log('Move file to mfs successfully');
   }
-  //  add new --------------
+
   checkExistCid = async (folderCid: string): Promise<boolean> => {
-    const ipfs = await this.prismaService.ipfs.findUnique({
+    const count = await this.prismaService.ipfs.count({
       where: { folderCid: folderCid },
     });
 
-    return !!ipfs;
+    return count > 0;
   };
+
   addIpfs = async (userId: number, addFileDto: AddFileIpfsDto) => {
     if (await this.checkExistCid(addFileDto.folderCid)) {
       throw new BadRequestException('exist cid');
     }
 
-    try {
-      const linkFile: string = getLinkIpfs(addFileDto.folderCid);
+    const linkFile: string = getLinkIpfs(addFileDto.folderCid);
 
-      const fileIpfs = await this.prismaService.ipfs.create({
-        data: {
-          name: addFileDto.fileName,
-          folderCid: addFileDto.folderCid,
-          sizeFolder: addFileDto.sizeFolder,
-          linkIpfs: linkFile,
-          userId,
-        },
-      });
+    const fileIpfs = await this.prismaService.ipfs.create({
+      data: {
+        name: addFileDto.fileName,
+        folderCid: addFileDto.folderCid,
+        sizeFolder: addFileDto.sizeFolder,
+        linkIpfs: linkFile,
+        userId,
+      },
+    });
 
-      return fileIpfs;
-    } catch (error) {
-      Logger.log(error);
-      throw new BadRequestException(error.message);
-    }
+    this.logger.log('Created ipfs successfully');
+    return fileIpfs;
   };
 
   getAllIpfs = async () => {

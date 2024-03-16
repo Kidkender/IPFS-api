@@ -13,21 +13,23 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
+import { storageConfig } from 'helpers';
 import { GetUser } from 'src/auth/decorators';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { AddFileIpfsDto, TransferIpfsFileDto } from './dto';
 import { IpfsService } from './ipfs.service';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { storageConfig } from 'helpers';
 
 @Controller('ipfs')
 export class IpfsController {
   constructor(private ipfsService: IpfsService) {}
 
   @Post('upload-file')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', { storage: storageConfig('file') }))
   async uploadFile(
+    @GetUser('id') userId: number,
     @Body('nameFolderMfs') nameFolderMfs: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
@@ -47,12 +49,14 @@ export class IpfsController {
   }
 
   @Post('mutiple-files')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: storageConfig('avatar'),
     }),
   )
   async uploadFiles(
+    @GetUser('id') userId: number,
     @Body('nameFolder') nameFolder: string,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
@@ -62,7 +66,6 @@ export class IpfsController {
     );
     return response;
   }
-  // new------------
 
   @Get('status')
   async fileStatus(@Res() res: Response, @Query('cid') cid: string) {

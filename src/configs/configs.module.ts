@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { EthersModule, SEPOLIA_NETWORK } from 'nestjs-ethers';
 import { ConfigsService } from './configs.service';
-import { ErrorHandlingService } from './errors.service';
+import { HttpErrorInterceptor } from './http.interceptor';
 
 @Module({
   imports: [
@@ -17,7 +17,7 @@ import { ErrorHandlingService } from './errors.service';
       },
     }),
   ],
-  providers: [ConfigsService, ErrorHandlingService],
-  exports: [ConfigsService, ErrorHandlingService],
+  providers: [ConfigsService, HttpErrorInterceptor],
+  exports: [ConfigsService, HttpErrorInterceptor],
 })
 export class ConfigsModule {}

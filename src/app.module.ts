@@ -1,8 +1,10 @@
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { ConfigsModule } from './configs/configs.module';
+import { HttpErrorInterceptor } from './configs/http.interceptor';
 import { ContractsModule } from './contracts/contracts.module';
 import { EvidencesModule } from './evidences/evidences.module';
 import { IpfsModule } from './ipfs/ipfs.module';
@@ -26,6 +28,11 @@ import { WalletModule } from './wallet/wallet.module';
     ContractsModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpErrorInterceptor,
+    },
+  ],
 })
 export class AppModule {}

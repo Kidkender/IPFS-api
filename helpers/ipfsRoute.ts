@@ -3,7 +3,7 @@ export const fixRouteAddFiles = (nameFolder: string, nameFile: string) => {
   return nameFolder + '%2F' + nameFile;
 };
 
-export const getLinkIpfs = (cid: string) => {
+export const getLinkIpfs = (cid: string): string => {
   if (!cid) return;
   return 'https://ipfs.io/ipfs/' + cid;
 };
