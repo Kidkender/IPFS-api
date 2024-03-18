@@ -1,6 +1,8 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class AddFileIpfsDto {
+  userId: number;
+
   @IsString()
   @IsNotEmpty()
   fileName: string;
@@ -10,8 +12,7 @@ export class AddFileIpfsDto {
   folderCid: string;
 
   @IsOptional()
-  evidenceId?: number;
-
-  @IsOptional()
   sizeFolder?: number;
+
+  quantityFile?: number;
 }

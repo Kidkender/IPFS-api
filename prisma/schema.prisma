@@ -78,6 +78,7 @@ model Ipfs {
   folderCid String @unique
   linkIpfs String?
   sizeFolder Float?
+  quantityFile Int?
 
   userId Int
   user User @relation(fields: [userId], references: [id])

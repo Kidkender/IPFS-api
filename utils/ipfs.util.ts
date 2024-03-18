@@ -8,6 +8,7 @@ const calculateHash = async (fileBytes: Buffer): Promise<string> => {
     return cidHash;
   } catch (error) {
     console.log('Error calculating hash ', error);
+    throw new Error('Error calculating hash');
   }
 };
 

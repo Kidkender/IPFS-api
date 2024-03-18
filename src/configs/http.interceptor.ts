@@ -28,18 +28,13 @@ export class HttpErrorInterceptor implements NestInterceptor {
         if (error instanceof TimeoutError) {
           return throwError(() => new RequestTimeoutException());
         }
+        const errorMessage = error.response.data
+          ? error.response.data
+          : error.message;
 
-        this.logger.error(
-          'Request error:  ' + JSON.stringify(error.response.data),
-        );
+        this.logger.error('Request error:  ' + JSON.stringify(errorMessage));
 
-        return throwError(
-          () =>
-            new HttpException(
-              'Internal Server Error',
-              HttpStatus.INTERNAL_SERVER_ERROR,
-            ),
-        );
+        return throwError(() => new HttpException(errorMessage, error.status));
       }),
     );
   }

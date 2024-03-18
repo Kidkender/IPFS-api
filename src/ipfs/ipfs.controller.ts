@@ -61,6 +61,7 @@ export class IpfsController {
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     const response = await this.ipfsService.uploadMutipleFiles(
+      userId,
       files,
       nameFolder,
     );
@@ -79,19 +80,6 @@ export class IpfsController {
     return res
       .status(HttpStatus.OK)
       .json(await this.ipfsService.contentDirectory(cid));
-  }
-
-  @Post()
-  @UseGuards(JwtAuthGuard)
-  async addFile(
-    @GetUser('id') userId: number,
-    @Body() addFileDto: AddFileIpfsDto,
-    @Res() res: Response,
-  ) {
-    await this.ipfsService.addIpfs(userId, addFileDto);
-    return res
-      .status(HttpStatus.OK)
-      .json({ message: 'Add database successfully' });
   }
 
   @Get('getall')

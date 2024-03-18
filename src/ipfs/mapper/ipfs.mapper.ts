@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { StatusResponseDto, UploadResponseDto } from '../dto';
+import { AddFileIpfsDto, StatusResponseDto, UploadResponseDto } from '../dto';
+import { convertToArray } from 'utils';
 
 @Injectable()
 export class IPFSMapper {
@@ -27,5 +28,17 @@ export class IPFSMapper {
       uploadResponseDto.size = item.Size;
       return uploadResponseDto;
     });
+  }
+
+  mapToAddIpfsDto(userId: number, data: any): AddFileIpfsDto {
+    const dataArray = convertToArray(data);
+    const indexOfFolder = dataArray.length - 1;
+    return {
+      fileName: dataArray[indexOfFolder].Name,
+      folderCid: dataArray[indexOfFolder].Hash,
+      sizeFolder: parseFloat(dataArray[indexOfFolder].Size),
+      userId: userId,
+      quantityFile: indexOfFolder,
+    };
   }
 }
