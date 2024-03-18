@@ -1,8 +1,9 @@
 import { HttpService } from '@nestjs/axios';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Ipfs } from '@prisma/client';
 import {
-  ERROR_CID_ALREADY_EXISTS,
+  ERROR_CID_ALREADY_EXIST,
   ERROR_CID_NOT_FOUND,
   VALIDATE_CID_REQUIRED,
   VALIDATE_FILE_REQUIRED,
@@ -14,7 +15,6 @@ import { firstValueFrom } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AddFileIpfsDto, StatusResponseDto, TransferIpfsFileDto } from './dto';
 import { IPFSMapper } from './mapper/ipfs.mapper';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class IpfsService {
@@ -126,7 +126,7 @@ export class IpfsService {
 
   addIpfs = async (addFileDto: AddFileIpfsDto): Promise<Ipfs> => {
     if (await this.checkExistCid(addFileDto.folderCid)) {
-      throw new BadRequestException(ERROR_CID_ALREADY_EXISTS);
+      throw new BadRequestException(ERROR_CID_ALREADY_EXIST);
     }
 
     const linkFile: string = getLinkIpfs(addFileDto.folderCid);

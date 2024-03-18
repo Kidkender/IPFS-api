@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { ERROR_WALLET_ALREADY_EXIST, ERROR_WALLET_NOT_FOUND } from 'constant';
 import { BigNumber, Wallet } from 'ethers';
 import { EthersSigner, InjectSignerProvider } from 'nestjs-ethers';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -16,7 +17,7 @@ export class WalletService {
 
   private readonly logger = new Logger(WalletService.name);
 
-  generateWallet = async (): Promise<Wallet> => {
+  private generateWallet = async (): Promise<Wallet> => {
     const wallet: Wallet = this.etherSigner.createRandomWallet();
     return wallet;
   };
@@ -33,7 +34,7 @@ export class WalletService {
 
   createWallet = async (userId: number) => {
     if (await this.getWalletByUserId(userId)) {
-      throw new BadRequestException('wallet exist');
+      throw new BadRequestException(ERROR_WALLET_ALREADY_EXIST);
     }
     const newWallet = await this.generateWallet();
     const wallet = this.prismaService.wallets.create({
@@ -50,6 +51,9 @@ export class WalletService {
         address: true,
       },
     });
+    this.logger.log(
+      `Create wallet for user ${(await wallet).userId}  successfully`,
+    );
     return wallet;
   };
 
@@ -70,7 +74,7 @@ export class WalletService {
     const wallet = await this.getWalletByUserId(userId);
 
     if (!wallet) {
-      throw new BadRequestException('Wallet not found');
+      throw new BadRequestException(ERROR_WALLET_NOT_FOUND);
     }
 
     return this.etherSigner.createWalletfromMnemonic(wallet.phrase);

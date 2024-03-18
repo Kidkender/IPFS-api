@@ -3,6 +3,7 @@ import { Evidence } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { EvidenceStatus } from './enum/status';
+import { ERROR_EVIDENCE_NOT_FOUND } from 'constant';
 
 @Injectable()
 export class EvidencesService {
@@ -35,7 +36,7 @@ export class EvidencesService {
   ): Promise<boolean> => {
     const evidence = await this.getEvidenceByUserId(evidenceId);
     if (!evidence) {
-      throw new NotFoundException('Evidence not found');
+      throw new NotFoundException(ERROR_EVIDENCE_NOT_FOUND);
     }
     await this.prismaService.evidence.update({
       where: {

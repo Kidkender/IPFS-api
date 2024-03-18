@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ContractsService } from './contracts.service';
 import { GasPriceResponseDto, TransferDto } from './dto';
 
@@ -8,7 +15,7 @@ export class ContractsController {
 
   @Get('balance')
   getBalance(@Query('address') address: string) {
-    return this.contractService.getAmountToken(address);
+    return this.contractService.getBalance(address);
   }
 
   @Get('votes')
@@ -34,5 +41,23 @@ export class ContractsController {
   @Get('total-supply')
   getTotalSupply() {
     return this.contractService.getTotalSupply();
+  }
+
+  @Post('mint-token')
+  async mintToken(@Query('amount', ParseIntPipe) amount: number) {
+    const response = await this.contractService.mintToken(amount);
+    return response;
+  }
+
+  @Post('burn-token')
+  async burnToken(@Query('amount', ParseIntPipe) amount: number) {
+    const response = await this.contractService.burnToken(amount);
+    return response;
+  }
+
+  @Post('delegate')
+  async delegate(@Query('address') address: string) {
+    const response = await this.contractService.delegate(address);
+    return response;
   }
 }

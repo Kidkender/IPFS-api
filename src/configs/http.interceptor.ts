@@ -20,15 +20,28 @@ import {
 @Injectable()
 export class HttpErrorInterceptor implements NestInterceptor {
   private readonly logger = new Logger(HttpErrorInterceptor.name);
+  private readonly routeWithoutTimeout: string[] = [
+    '/contracts/mint-token',
+    '/contracts/burn-token',
+    '/contracts/delegate',
+  ];
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const { url } = request;
+
+    const shouldTimeout = !this.routeWithoutTimeout.some((route) =>
+      url.includes(route),
+    );
+
     return next.handle().pipe(
-      timeout(5000),
+      shouldTimeout ? timeout(5000) : (obs) => obs,
+
       catchError((error: AxiosError) => {
         if (error instanceof TimeoutError) {
           return throwError(() => new RequestTimeoutException());
         }
-        const errorMessage = error.response.data
+        const errorMessage = error.response?.data
           ? error.response.data
           : error.message;
 
