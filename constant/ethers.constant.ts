@@ -9,3 +9,6 @@ export const TIMELOCK_ADDRESS = '0x57e95b2e4Dfa01323a1F15db48d6A90e497c895D';
 
 export const TOKEN_ABI_JSON = 'Token';
 export const EVIDENCE_STORAGE_ABI_JSON = 'EvidenceStorage';
+export const EVIDENCE_VALIDATOR_ABI_JSON = 'EvidenceValidator';
+export const EVIDENCE_VALIDATOR_ADDRESS =
+  '0xC0bd5B5069eF1f6Ef7093776cc8b5c071adFcC65';

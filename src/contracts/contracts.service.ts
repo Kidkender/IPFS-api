@@ -9,10 +9,28 @@ import {
 
 import { BaseProvider } from '@ethersproject/providers';
 import { ConfigService } from '@nestjs/config';
-import { SIGNER_ADDRESS, TOKEN_ABI_JSON, TOKEN_ADDRESS } from 'constant';
+import {
+  EVIDENCE_STORAGE_ABI_JSON,
+  EVIDENCE_STORAGE_ADDRESS,
+  EVIDENCE_VALIDATOR_ABI_JSON,
+  EVIDENCE_VALIDATOR_ADDRESS,
+  SIGNER_ADDRESS,
+  TOKEN_ABI_JSON,
+  TOKEN_ADDRESS,
+} from 'constant';
 import { Contract, VoidSigner, Wallet, ethers } from 'ethers';
-import { convertToDecimal, convertToEther, getAbi } from 'utils';
-import { GasPriceResponseDto, TransferDto } from './dto';
+import { EvidencesService } from 'src/evidences/evidences.service';
+import { WalletService } from 'src/wallet/wallet.service';
+import {
+  convertToDecimal,
+  convertToEther,
+  generateSignature,
+  getAbi,
+  getPrivateKeyFromMnemonic,
+  hashData,
+} from 'utils';
+import { GasPriceResponseDto, RetrieveEvidenceDto, TransferDto } from './dto';
+import { SubmitEvidenceDto } from './dto/submit-evidence.dto';
 import { ContractMapper } from './mapper/contracts.mapper';
 
 @Injectable()
@@ -22,6 +40,8 @@ export class ContractsService {
     @InjectEthersProvider() private readonly ethersProvider: BaseProvider,
     @InjectSignerProvider() private readonly signerProvider: EthersSigner,
     private readonly configService: ConfigService,
+    private readonly walletService: WalletService,
+    private readonly evidenceService: EvidencesService,
     private readonly contractMapper: ContractMapper,
   ) {}
   private readonly logger = new Logger(ContractsService.name);
@@ -49,7 +69,9 @@ export class ContractsService {
 
   /**
    *
-   * @returns voidSigner
+   * Get the contract instance for the token contract.
+   * This method retrieves the contract instance for interacting with the token contract on the blockchain.
+   * @returns A promise that resolves to the contract instance for the token contract.
    */
   private async getTokenContract(): Promise<Contract> {
     return await this.getContract(
@@ -79,6 +101,12 @@ export class ContractsService {
     const tokenContract = await this.getTokenContract();
     const votes = await tokenContract.callStatic.getVotes(address);
     return convertToDecimal(votes);
+  };
+
+  getRewardTokenAmount = async () => {
+    const tokenContract = await this.getTokenContract();
+    const result = await tokenContract.callStatic.rewardTokenAmount();
+    return convertToDecimal(result);
   };
 
   async getFeeData(): Promise<GasPriceResponseDto> {
@@ -113,6 +141,12 @@ export class ContractsService {
     return ethers.utils.formatEther(
       convertToDecimal(await tokenContract.callStatic.totalSupply()),
     );
+  };
+
+  getTransactionTaxRate = async () => {
+    const tokenContract = await this.getTokenContract();
+    const result = await tokenContract.callStatic.transactionTaxRate();
+    return convertToDecimal(result);
   };
 
   // Effect delegate
@@ -168,6 +202,21 @@ export class ContractsService {
     return result;
   };
 
+  setAmountTokenForReward = async (amount: number) => {
+    const valueInWei = convertToEther(amount);
+    const tokenContract = await this.getTokenContract();
+
+    const signer = this.getSigner(this.PRIVATE_KEY_OWNER);
+    const result = await tokenContract
+      .connect(signer)
+      .setRewardTokenAmount(valueInWei);
+    this.logger.log(
+      `Set new reward token amount: ${amount} token successfully`,
+    );
+
+    return result;
+  };
+
   /**
    *
    * Transfer tokens from one address to another.
@@ -190,7 +239,98 @@ export class ContractsService {
       return result;
     } catch (error) {
       this.logger.error(error);
-      console.log(error);
     }
+  };
+
+  // Contract evidence
+
+  private async getEvidenceStorageContract(): Promise<Contract> {
+    return await this.getContract(
+      EVIDENCE_STORAGE_ABI_JSON,
+      EVIDENCE_STORAGE_ADDRESS,
+      this.getVoidSigner(SIGNER_ADDRESS),
+    );
+  }
+
+  submitEvidence = async (
+    userId: number,
+    submitEvidence: SubmitEvidenceDto,
+  ) => {
+    const evidenceStorage = await this.getEvidenceStorageContract();
+    const wallet = await this.walletService.getWalletByUserId(userId);
+
+    const privateKey = getPrivateKeyFromMnemonic(wallet.phrase);
+
+    const evidenceHash = hashData(submitEvidence.cidFolder);
+    const signature = await generateSignature(
+      submitEvidence.cidFolder,
+      privateKey,
+    );
+    const signer = this.getSigner(privateKey);
+
+    const result = await evidenceStorage
+      .connect(signer)
+      .submitEvidence(evidenceHash, signature);
+    this.logger.log('submit evidence succeeded at: ', Date.now());
+
+    return result;
+  };
+
+  retriveEvidence = async (
+    userId: number,
+    cid: string,
+  ): Promise<RetrieveEvidenceDto> => {
+    const evidenceStorage = await this.getEvidenceStorageContract();
+    const evidenceHash = hashData(cid);
+
+    const wallet = await this.walletService.getWalletByUserId(userId);
+
+    const privateKey = getPrivateKeyFromMnemonic(wallet.phrase);
+
+    const signer = this.getSigner(privateKey);
+
+    const result = await evidenceStorage
+      .connect(signer)
+      .callStatic.evidences(evidenceHash);
+
+    return this.contractMapper.mapDataToRetrieve(result);
+  };
+
+  // Evidence validator contract
+
+  private async getEvidenceValidatorContract(): Promise<Contract> {
+    return await this.getContract(
+      EVIDENCE_VALIDATOR_ABI_JSON,
+      EVIDENCE_VALIDATOR_ADDRESS,
+      this.getVoidSigner(SIGNER_ADDRESS),
+    );
+  }
+
+  checkEvidenceValid = async (cid: string): Promise<boolean> => {
+    const evidenceValidator = await this.getEvidenceValidatorContract();
+    const hashEvidence = hashData(cid);
+    const result =
+      await evidenceValidator.callStatic.isEvidenceValid(hashEvidence);
+    console.log(result);
+    return result;
+  };
+
+  validateEvidence = async (userId: number, request: SubmitEvidenceDto) => {
+    const evidenceValidator = await this.getEvidenceValidatorContract();
+    const wallet = await this.walletService.getWalletByUserId(userId);
+
+    const privateKey = getPrivateKeyFromMnemonic(wallet.phrase);
+
+    const evidenceHash = hashData(request.cidFolder);
+    const signature = await generateSignature(request.cidFolder, privateKey);
+    const signer = this.getSigner(privateKey);
+
+    const result = await evidenceValidator
+      .connect(signer)
+      .validateEvidence(evidenceHash, signature);
+
+    console.log(result);
+    this.logger.log('Validate evidence successfully');
+    return result;
   };
 }

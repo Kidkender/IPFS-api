@@ -4,7 +4,6 @@ import {
   Param,
   ParseIntPipe,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { GetUser } from 'src/auth/decorators';
@@ -29,21 +28,6 @@ export class WalletController {
   @Get('/address/:address')
   getAddressByAddress(@Param('address') address: string) {
     return this.walletService.getWalletByAddress(address);
-  }
-
-  @Post('/signature')
-  @UseGuards(JwtAuthGuard)
-  async getSignature(
-    @GetUser('id') id: number,
-    @Query('message') message: string,
-  ) {
-    return await this.walletService.createSignature(id, message);
-  }
-
-  @Get('/balance')
-  @UseGuards(JwtAuthGuard)
-  async getBalance(@GetUser('id') id: number) {
-    return await this.walletService.getBalance(id);
   }
 
   @Get('id/:id')

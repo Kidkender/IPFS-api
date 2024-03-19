@@ -3,6 +3,8 @@ export const ERROR_CID_NOT_FOUND = 'error.cid.not-found';
 export const ERROR_WALLET_NOT_FOUND = 'error.wallet.not-found';
 export const ERROR_WALLET_ALREADY_EXIST = 'error.wallet.already.exist';
 export const ERROR_EVIDENCE_NOT_FOUND = 'error.evidence.not-found';
+export const ERROR_WALLET_MMEMONIC_NOT_FOUND =
+  'error.wallet.mmemonic.not-found';
 
 export const VALIDATE_CID_REQUIRED = 'validate.cid.required';
 export const VALIDATE_FILE_REQUIRED = 'validate.request.file.required';
@@ -13,6 +15,10 @@ export const VALIDATE_ADDRESS_TRANSFER_FROM_REQUIRED =
   'validate.address.transfer-from.required';
 export const VALIDATE_ADDRESS_TRANSFER_TO_REQUIRED =
   'validate.address.transfer-to.required';
+export const VALIDATE_ADDRESS_REQUIRED = 'validate.address.required';
 export const VALIDATE_ADDRESS_ETHEREUM_INVALID =
   'validate.address.ethereum.invalid';
 export const VALIDATE_AMOUNT_TOKEN_INVALID = 'validate.amount.token.invalid';
+export const VALIDATE_EVIDENCE_HASH_REQUIRED =
+  'validate.evidence.hash.required';
+export const VALIDATE_PRIVATE_KEY_REQUIRED = 'validate.private.key.required';

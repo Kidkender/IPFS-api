@@ -7,5 +7,6 @@ import { WalletMapper } from './mapper/wallet.mapper';
   imports: [],
   providers: [WalletService, WalletMapper],
   controllers: [WalletController],
+  exports: [WalletService],
 })
 export class WalletModule {}

@@ -24,6 +24,7 @@ export class HttpErrorInterceptor implements NestInterceptor {
     '/contracts/mint-token',
     '/contracts/burn-token',
     '/contracts/delegate',
+    '/contracts/evidence/submit',
   ];
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {

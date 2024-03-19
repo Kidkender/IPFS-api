@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import * as fs from 'fs';
 
-export const hashMessage = (message: string): string => {
+export const hashData = (message: string): string => {
   return ethers.utils.hashMessage(message);
 };
 
@@ -32,4 +32,9 @@ export const getAbi = (pathFile: string) => {
     fs.readFileSync(`utils/abi/${pathFile}.json`, 'utf8'),
   );
   return parsed.abi;
+};
+
+export const getPrivateKeyFromMnemonic = (mnemonic: string): string => {
+  const wallet = ethers.Wallet.fromMnemonic(mnemonic);
+  return wallet.privateKey;
 };

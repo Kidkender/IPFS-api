@@ -8,7 +8,7 @@ export class WalletMapper {
     if (!wallet) {
       return;
     }
-    const walletDto: WalletResponseDto = {
+    return {
       id: wallet.id,
       userId: wallet.userId,
       address: wallet.address,
@@ -16,6 +16,5 @@ export class WalletMapper {
       balance: wallet.balance ? BigInt(wallet.balance.toString()) : 0,
       createdAt: wallet.createdAt,
     };
-    return walletDto;
   }
 }

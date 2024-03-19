@@ -8,5 +8,6 @@ import { EvidencesController } from './evidences.controller';
   imports: [],
   providers: [EvidencesService, UserService, UserMapper],
   controllers: [EvidencesController],
+  exports: [EvidencesService],
 })
 export class EvidencesModule {}

@@ -14,7 +14,7 @@ import {
 export class TransferDto {
   @IsNotEmpty({ message: VALIDATE_ADDRESS_TRANSFER_FROM_REQUIRED })
   @IsEthereumAddress({ message: VALIDATE_ADDRESS_ETHEREUM_INVALID })
-  transferFrom: String;
+  transferFrom: string;
 
   @IsString({ message: VALIDATE_ADDRESS_TRANSFER_TO_REQUIRED })
   @IsEthereumAddress({ message: VALIDATE_ADDRESS_ETHEREUM_INVALID })
