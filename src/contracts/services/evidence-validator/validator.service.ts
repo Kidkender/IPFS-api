@@ -7,15 +7,11 @@ import {
 import { Contract } from 'ethers';
 import { ContractsService } from 'src/contracts/contracts.service';
 import { SubmitEvidenceDto } from 'src/contracts/dto/submit-evidence.dto';
-import { WalletService } from 'src/wallet/wallet.service';
-import { generateSignature, getPrivateKeyFromMnemonic, hashData } from 'utils';
+import { generateSignature, hashData } from 'utils';
 
 @Injectable()
 export class EvidenceValidatorService {
-  constructor(
-    private readonly contractService: ContractsService,
-    private readonly walletService: WalletService,
-  ) {}
+  constructor(private readonly contractService: ContractsService) {}
 
   private readonly logger = new Logger(EvidenceValidatorService.name);
 
@@ -27,6 +23,12 @@ export class EvidenceValidatorService {
     );
   }
 
+  /**
+   * Checks whether evidences associated with a given CID Folder (IPFS) is valid.
+   *
+   * @param cid The CID of the evidence stored in IPFS.
+   * @returns A promise resolving to boolean indicating whether the evidence stored in IPFS is valid
+   */
   checkEvidenceValid = async (cid: string): Promise<boolean> => {
     const evidenceValidator = await this.getEvidenceValidatorContract();
     const hashEvidence = hashData(cid);
@@ -35,11 +37,17 @@ export class EvidenceValidatorService {
     return result;
   };
 
+  /**
+   * Validates evidence submitted by a user.
+   *
+   * @param userId The ID of the user submitting the evidence.
+   * @param request The SubmitEvidenceDto containing the details of the evidence to be validated.
+   * @returns A Promise resolving to the validation result.
+   */
   validateEvidence = async (userId: number, request: SubmitEvidenceDto) => {
     const evidenceValidator = await this.getEvidenceValidatorContract();
-    const wallet = await this.walletService.getWalletByUserId(userId);
-
-    const privateKey = getPrivateKeyFromMnemonic(wallet.phrase);
+    const privateKey =
+      await this.contractService.getPrivateKeyFromUserId(userId);
 
     const evidenceHash = hashData(request.cidFolder);
     const signature = await generateSignature(request.cidFolder, privateKey);

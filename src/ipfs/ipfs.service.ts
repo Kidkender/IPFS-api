@@ -6,12 +6,12 @@ import {
   ERROR_CID_ALREADY_EXIST,
   ERROR_CID_NOT_FOUND,
   VALIDATE_CID_REQUIRED,
-  VALIDATE_FILE_REQUIRED,
 } from 'constant';
 import FormData from 'form-data';
 import * as fs from 'fs';
 import { fixRouteAddFiles, getLinkIpfs } from 'helpers';
 import { firstValueFrom } from 'rxjs';
+import { handleHttpRequestError } from 'src/configs/httpErrors';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AddFileIpfsDto, StatusResponseDto, TransferIpfsFileDto } from './dto';
 import { IPFSMapper } from './mapper/ipfs.mapper';
@@ -28,6 +28,12 @@ export class IpfsService {
 
   private domainNgRok: string = this.configService.get('NGROK_DOMAIN');
 
+  /**
+   * Retrieve the status of a file/folder stored in IPFS using the provided CID.
+   *
+   * @param cid The Content Identifier of the file/folder in IPFS
+   * @returns A promise resolving to StatusResponseDto object representing the status of the file
+   */
   fileStatus = async (cid: string): Promise<StatusResponseDto> => {
     if (!cid) throw new BadRequestException(VALIDATE_CID_REQUIRED);
 
@@ -35,17 +41,24 @@ export class IpfsService {
       this.httpService.post(
         `https://${this.domainNgRok}/api/v0/files/stat?arg=/ipfs/${cid}`,
       ),
-    );
+    ).catch(handleHttpRequestError);
 
     return this.ipfsMapper.mapResponseToStatusResponseDto(response.data);
   };
 
+  /**
+   * Retrieves the content of a directory stored in IPFS using the provided folder CID.
+   *
+   * @param folderCid The Content Identifier (CID) of the folder in IPFS.
+   * @returns A Promise resolving to a string representing the content of the directory.
+   * @throws HttpException if an error occurs during the HTTP request.
+   */
   contentDirectory = async (folderCid: string): Promise<string> => {
     const response = await firstValueFrom(
       this.httpService.post(
         `https://${this.domainNgRok}/api/v0/ls?arg=/ipfs/${folderCid}`,
       ),
-    );
+    ).catch(handleHttpRequestError);
     return response.data;
   };
 
@@ -64,25 +77,17 @@ export class IpfsService {
           ...formData.getHeaders(),
         },
       }),
-    );
+    ).catch(handleHttpRequestError);
   };
 
-  uploadFile = async (file: Express.Multer.File, nameFolderMfs: string) => {
-    if (!file) {
-      throw new BadRequestException(VALIDATE_FILE_REQUIRED);
-    }
-
-    const formData = new FormData();
-
-    const fileData = fs.readFileSync(file.path);
-    formData.append('file', fileData, {
-      filename: file.originalname,
-    });
-
-    const response = await this.uploadFormData(formData);
-    return response.data;
-  };
-
+  /**
+   * Uploads multiple files to IPFS.
+   *
+   * @param userId The ID of the user performing the upload.
+   * @param files An array of files to be uploaded.
+   * @param nameFolder The name of the folder where the files will be stored.
+   * @returns A Promise resolving to an object representing the result of the IPFS upload.
+   */
   uploadMutipleFiles = async (
     userId: number,
     files: Express.Multer.File[],

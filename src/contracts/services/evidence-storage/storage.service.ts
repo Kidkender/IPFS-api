@@ -9,14 +9,12 @@ import { ContractsService } from 'src/contracts/contracts.service';
 import { RetrieveEvidenceDto } from 'src/contracts/dto';
 import { SubmitEvidenceDto } from 'src/contracts/dto/submit-evidence.dto';
 import { ContractMapper } from 'src/contracts/mapper/contracts.mapper';
-import { WalletService } from 'src/wallet/wallet.service';
-import { generateSignature, getPrivateKeyFromMnemonic, hashData } from 'utils';
+import { generateSignature, hashData } from 'utils';
 
 @Injectable()
 export class StorageService {
   constructor(
     private readonly contractService: ContractsService,
-    private readonly walletService: WalletService,
     private readonly contractMapper: ContractMapper,
   ) {}
   private readonly logger = new Logger(StorageService.name);
@@ -29,14 +27,21 @@ export class StorageService {
     );
   }
 
+  /**
+   * Submits evidence to the evidence storage contract on behalf of a user.
+   *
+   * @param userId The ID of the user submitting the evidence.
+   * @param submitEvidence The SubmitEvidenceDto containing the details of the evidence to be submitted.
+   * @returns A Promise resolving to the result of the evidence submission.
+   */
   submitEvidence = async (
     userId: number,
     submitEvidence: SubmitEvidenceDto,
   ) => {
     const evidenceStorage = await this.getEvidenceStorageContract();
-    const wallet = await this.walletService.getWalletByUserId(userId);
 
-    const privateKey = getPrivateKeyFromMnemonic(wallet.phrase);
+    const privateKey =
+      await this.contractService.getPrivateKeyFromUserId(userId);
 
     const evidenceHash = hashData(submitEvidence.cidFolder);
     const signature = await generateSignature(
@@ -53,6 +58,13 @@ export class StorageService {
     return result;
   };
 
+  /**
+   * Retrieves evidence associated with a given CID for a specific user.
+   *
+   * @param userId The ID of the user retrieving the evidence.
+   * @param cid The Content Identifier (CID) of the evidence to be retrieved.
+   * @returns A Promise resolving to a RetrieveEvidenceDto object representing the retrieved evidence.
+   */
   retriveEvidence = async (
     userId: number,
     cid: string,
@@ -60,10 +72,8 @@ export class StorageService {
     const evidenceStorage = await this.getEvidenceStorageContract();
     const evidenceHash = hashData(cid);
 
-    console.log('Hello');
-    const wallet = await this.walletService.getWalletByUserId(userId);
-
-    const privateKey = getPrivateKeyFromMnemonic(wallet.phrase);
+    const privateKey =
+      await this.contractService.getPrivateKeyFromUserId(userId);
 
     const signer = this.contractService.getSigner(privateKey);
 
