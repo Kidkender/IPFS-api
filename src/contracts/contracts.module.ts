@@ -7,8 +7,9 @@ import { WalletModule } from 'src/wallet/wallet.module';
 import { EvidencesModule } from 'src/evidences/evidences.module';
 
 @Module({
-  imports: [ConfigsModule, WalletModule, EvidencesModule],
+  imports: [ConfigsModule],
   providers: [ContractsService, ContractMapper],
   controllers: [ContractsController],
+  exports: [ContractsService, ContractMapper],
 })
 export class ContractsModule {}
